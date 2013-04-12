@@ -8,7 +8,7 @@ D = sys.argv[1]
 
 D_Obj = open(D).readlines()
 
-idf = ID_REF
+idf = 'IDENTIFIER'
 
 try:
 	idf = sys.argv[2]
@@ -16,7 +16,6 @@ try:
 except:
 	pass
 
-#M_ob = ob2moses(numpy.array(ob_transform(D_Obj, identifier='ID_REF', enum=True)))
 M_ob = ob2moses(numpy.array(ob_transform(D_Obj, identifier=idf, enum=True)))
 
 def binarizeMoses(mosesObj):
