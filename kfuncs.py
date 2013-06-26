@@ -22,6 +22,15 @@ def intersection(L1,L2):
 		if x in M: O[x] = True
 	return O.keys()
 
+def groupIntersection(group):
+	if len(group) == 1:
+		return group[0]
+	else:
+		out = group[0]
+		for x in group[1:]:
+			out = intersection(out,x)
+		return out
+
 def complement(L1,L2):
 	M = {}
 	O = {}

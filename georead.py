@@ -30,11 +30,12 @@ def getClasses(FileObj):
 
 def manualMap(mapobj,targetCategory,TargetClass = ''):
 	out = {}
-	if targetCategory not in mapobj.keys():
+	#if targetCategory not in mapobj.keys():
+	while targetCategory not in mapobj.keys():
 		print 'Specified target category \''+targetCategory+'\' not in target class \''+TargetClass+'\''
-		print 'Available categories:'
-		print mapobj.keys()
-		return mapobj
+		print 'Available categories:' + repr(mapobj.keys())
+		targetCategory = raw_input("Enter desired category: ")
+		#return mapobj
 	for x in mapobj.keys():
 		if x == targetCategory:
 			out[x] = 1
@@ -46,11 +47,12 @@ def MapSample(FileObj, targetClass=''):
 	import operator
 	out = {}
 	lines = which(FileObj,'!subset_sample_id')
+	classes = getClasses(FileObj)
+	print classes
+	sortedClass = sorted(classes.iteritems(), key=operator.itemgetter(1))
 	if targetClass == '':
-		classes = getClasses(FileObj)
-		sortedClass = sorted(classes.iteritems(), key=operator.itemgetter(1))
 		targetClass = sortedClass[0][0]
-		print 'Using class \'' + targetClass + '\' as target, specify targetClass to override'
+		print '[targetClass] not specified, using class \'' + targetClass + '\' as target'
 	for x in lines:
 		category = FileObj[x-1].strip().split(" = ")[1]
 		if FileObj[x+1].strip().split(" = ")[1] == targetClass:
@@ -86,6 +88,7 @@ def MapGroups(FileObj, targetCategory='', targetClass=''):
 	#Label cases according to target category:
 	if targetCategory != '':
 		categories = manualMap(categories,targetCategory,TargetClass = targetClass)
+	print "Mapped categories: "+repr(categories)
 	return categories
 
 def desc(FileObj):
@@ -109,17 +112,21 @@ def extractDataToFile(File, dest='.'):
 	writelist(O,D)
 	O.close()
 
-def featureRank(DataObj, targetCategory):
+def featureRank(DataObj, targetCategory, logResult = False):
 	out = []
 	from numpy import mean, std, array, sqrt, log, concatenate
-	import scipy.stats
+	#import scipy.stats
+	from scipy import stats
 	casecols = which(DataObj[1],targetCategory)
 	controlcols = tuple(set(range(1,len(DataObj[1]))).difference(set(casecols)))
 	for x in DataObj[2:]:
 		cases = array(listToFloat(getByIndex(x,casecols)))
 		controls = array(listToFloat(getByIndex(x,controlcols)))
 		T = stats.ttest_ind(cases,controls)
-		out.append(-log(T[1]))
+		if logResult:
+			out.append(-log(T[1]))
+		else:
+			out.append(T[1])		
 	return out
 
 def extractFeatureIndex(metric, cutoff):
@@ -130,6 +137,12 @@ def extractFeatureIndex(metric, cutoff):
 			out.append(c)
 		c+=1
 	return tuple(out)
+
+def extractOB(obdata, lines):
+	out = []
+	for x in lines:
+		out.append(obdata[x+2][1:])
+	return numpy.array(out)
 
 def ob_transform(FileObj, identifier='IDENTIFIER',targetClass = '',targetCategory='',enum=False, removeControls=True):
 	from numpy import array, transpose
@@ -168,7 +181,6 @@ def ob_transform(FileObj, identifier='IDENTIFIER',targetClass = '',targetCategor
 		pbar = P.ProgressBar(maxval=len(EDATA[1:]), widgets=widgets).start()
 	R = 0
 	for x in EDATA[1:]:
-		#print getByIndex(tokenize(x),incl_cols)
 		if removeControls:
 			if not (re.search('control',tokenize(x)[1],re.IGNORECASE)):
 				MDATA.append(getByIndex(tokenize(x),incl_cols))
@@ -246,7 +258,7 @@ def binarizeDataset(dataset, metric='median'):
 		print 'Binarization metric has to be one of the following:'
 		print '|'.join(modes)
 	else:
-		print 'Binarize dataset done (Metric: ['+metric+'])'
+		print 'Binarize dataset done using metric: ['+metric+'])'
 		return [binarize(x) for x in dataset]
 
 def concatDatasets(ListOfDatasets,index,binarize=False):
@@ -290,6 +302,16 @@ def ob2moses(dataset):
 	for x in T[1:]:
 		out.append(array(x[1:]).astype(float))
 	return array(out)
+
+def binarizeMoses(mosesObj):
+	labels = numpy.array([eval(x) for x in mosesObj[1:,0]]).astype(int)
+	dat = mosesObj[1:,1:].astype(float)
+	datB = binarizeDataset(dat)
+	out = list([M_ob[0]])
+	for i in range(len(labels)):
+		out.append([labels[i]]+list(datB[i]))
+	return numpy.array(out)
+
 
 if __name__ == '__main__':
 	mtest = moses_transform(X, 'psoriasis', cutoff=30, identifier='IDENTIFIER')

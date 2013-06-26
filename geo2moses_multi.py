@@ -34,11 +34,9 @@ def main(argv):
 	ifile = ''
 	ofile = ''
 	p_cutoff = 0
-	targetCategory = ''
-	targetClass=''
 	idf = 'IDENTIFIER'
 	try:
-		opts, args = getopt.getopt(argv,"hi:o:d:p:b:t:c:",["ifile=","ofile=","identifier=","pval=","binarize=","targetCategory=","targetClass="])
+		opts, args = getopt.getopt(argv,"hi:o:d:p:b",["ifile=","ofile=","identifier=","pval=","binarize="])
 	except getopt.GetoptError:
 		print 'test.py -i <inputfile> -o <outputfile>'
 		sys.exit(2)
@@ -54,10 +52,6 @@ def main(argv):
 			idf = arg
 		elif opt in ("-p", "--pval"):
 			p_cutoff = arg
-		elif opt in ("-t", "targetCategory="):
-			targetCategory = arg
-		elif opt in ("-c", "targetClass="):
-			targetClass = arg
 		elif opt in ("-b", "--binarize"):
 			binarize = arg
 			print binarize
@@ -65,7 +59,7 @@ def main(argv):
 	if ofile == '':
 		ofile = ifile+'.moses'
 	D_Obj = open(D).readlines()
-	OB = ob_transform(D_Obj, identifier=idf, enum=True, targetCategory=targetCategory, targetClass=targetClass)
+	OB = ob_transform(D_Obj, identifier=idf, enum=True)
 	print 'Detected ' + str(len(D_Obj)-2) + ' features'
 	if idf != 'IDENTIFIER':
 		print '[identifier] flag on, overriding identifier as '+idf
