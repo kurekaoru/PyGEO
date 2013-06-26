@@ -1,2 +1,0 @@
-print(commandArgs()[6])
-
